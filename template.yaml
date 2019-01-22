@@ -21,7 +21,7 @@ Resources:
       MemorySize: 3008
       Environment:
         Variables:
-          AWS_S3_BUCKET: screenshots-development
+          AWS_S3_BUCKET: pngdiff-production
       Events:
         CatchAll:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
