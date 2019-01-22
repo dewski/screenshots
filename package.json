@@ -1,0 +1,8 @@
+{
+  "name": "screenshots",
+  "private": true,
+  "scripts": {
+    "package": "sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket screeny-production",
+    "deploy": "aws cloudformation deploy --template-file packaged.yaml --stack-name pngdiff-screenshots --capabilities CAPABILITY_IAM"
+  }
+}
