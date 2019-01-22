@@ -1,4 +1,6 @@
 /screenshots/node_modules
+/compare-images/node_modules
+/node_modules
 /packaged.yaml
 .DS_Store
-/node_modules
+

@@ -28,3 +28,20 @@ Resources:
           Properties:
             Path: /screenshot
             Method: GET
+  CompareImages:
+      Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+      Properties:
+        CodeUri: compare-images/
+        Handler: app.lambdaHandler
+        Runtime: nodejs8.10
+        Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+        MemorySize: 3008
+        Environment:
+          Variables:
+            AWS_S3_BUCKET: screenshots-development
+        Events:
+          CatchAll:
+            Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+            Properties:
+              Path: /compare-images
+              Method: GET

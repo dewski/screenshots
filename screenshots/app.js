@@ -75,8 +75,8 @@ exports.lambdaHandler = async (event) => {
   const viewportWidth = parseInt(event.queryStringParameters['viewport_width'] || 1400, 10)
   const viewportHeight = parseInt(event.queryStringParameters['viewport_height'] || 900, 10)
   const wait = parseInt(event.queryStringParameters['wait'] || 1, 10)
-  const path = event.queryStringParameters['path']
   const fullPage = "full_page" in event.queryStringParameters
+  const path = event.queryStringParameters['path']
 
   if(path === undefined || path === '') {
     return {

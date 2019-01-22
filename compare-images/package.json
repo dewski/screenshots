@@ -1,0 +1,8 @@
+{
+  "name": "compare-images",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "^2.392.0",
+    "blink-diff": "^1.0.13"
+  }
+}
