@@ -11,7 +11,11 @@ function sleep(ms) {
 
 async function putObject(params) {
   return new Promise((resolve, reject) => {
+    console.time(params.Key)
+
     s3.putObject(params, (err, data) => {
+      console.timeEnd(params.Key)
+
       if (err) {
         reject(err)
       } else {
@@ -56,6 +60,7 @@ async function putObject(params) {
  *
  */
 exports.lambdaHandler = async (event) => {
+  const executionStarted = new Date()
   let url
   try {
     url = new URL(event.queryStringParameters['url'], true)
@@ -191,12 +196,15 @@ exports.lambdaHandler = async (event) => {
 
   try {
     const response = await putObject(params)
+    const executionFinished = new Date()
+
     return {
       statusCode: 200,
       body: JSON.stringify({
         success: true,
         url: url.toString(),
         key: path,
+        took: executionFinished - executionStarted,
       })
     }
   }

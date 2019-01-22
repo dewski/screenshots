@@ -21,8 +21,10 @@ function validateKey(value, key) {
 async function putObject(params) {
   return new Promise((resolve, reject) => {
     console.time(params.Key)
+
     s3.putObject(params, (err, data) => {
-      console.time(params.Key)
+      console.timeEnd(params.Key)
+
       if (err) {
         reject(err)
       } else {

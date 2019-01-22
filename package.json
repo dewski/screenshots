@@ -2,6 +2,7 @@
   "name": "screenshots",
   "private": true,
   "scripts": {
+    "server": "sam local start-api --template dev-template.yaml --port 3001",
     "package": "sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket screeny-production",
     "deploy": "aws cloudformation deploy --template-file packaged.yaml --stack-name pngdiff-screenshots --capabilities CAPABILITY_IAM"
   }
