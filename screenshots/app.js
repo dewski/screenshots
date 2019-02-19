@@ -195,11 +195,11 @@ exports.lambdaHandler = async event => {
 
   const params = {
     Bucket: process.env.AWS_S3_BUCKET,
+    CacheControl: "max-age",
     Key: path,
     Body: buffer,
     ACL: "public-read",
-    ContentType: "image/png",
-    Expires: "Wed Dec 31 1969 16:00:00 GMT-0800 (PST)"
+    ContentType: "image/png"
   };
 
   try {

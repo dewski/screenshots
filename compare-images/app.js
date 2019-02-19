@@ -245,6 +245,7 @@ exports.lambdaHandler = async event => {
       const fileData = fs.readFileSync(outputPath);
       const params = {
         Bucket: process.env.AWS_S3_BUCKET,
+        CacheControl: "max-age",
         Key: destinationPath,
         Body: fileData,
         ACL: "public-read",
