@@ -1,9 +1,9 @@
-const aws = require('aws-sdk')
-const URL = require('url-parse')
-const puppeteer = require('puppeteer')
-const { extract, cleanup } = require('aws-puppeteer-lambda')
+const aws = require("aws-sdk");
+const URL = require("url-parse");
+const puppeteer = require("puppeteer");
+const { extract, cleanup } = require("aws-puppeteer-lambda");
 
-const s3 = new aws.S3()
+const s3 = new aws.S3();
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -11,18 +11,18 @@ function sleep(ms) {
 
 async function putObject(params) {
   return new Promise((resolve, reject) => {
-    console.time(params.Key)
+    console.time(params.Key);
 
     s3.putObject(params, (err, data) => {
-      console.timeEnd(params.Key)
+      console.timeEnd(params.Key);
 
       if (err) {
-        reject(err)
+        reject(err);
       } else {
-        resolve(data)
+        resolve(data);
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -59,144 +59,152 @@ async function putObject(params) {
  * @returns {Object} object.body - JSON Payload to be returned
  *
  */
-exports.lambdaHandler = async (event) => {
-  const executionStarted = new Date()
-  let url
+exports.lambdaHandler = async event => {
+  const executionStarted = new Date();
+  let url;
   try {
-    url = new URL(event.queryStringParameters['url'], true)
-  }
-  catch (err) {
+    url = new URL(event.queryStringParameters["url"], true);
+  } catch (err) {
     return {
       statusCode: 400,
       body: JSON.stringify({
         error: "could not parse url",
-        message: err.toString(),
+        message: err.toString()
       })
-    }
+    };
   }
 
   // Set min/max values
-  const scaleFactor = parseInt(event.queryStringParameters['scale_factor'] || 2, 10)
-  const viewportWidth = parseInt(event.queryStringParameters['viewport_width'] || 1400, 10)
-  const viewportHeight = parseInt(event.queryStringParameters['viewport_height'] || 900, 10)
-  const wait = parseInt(event.queryStringParameters['wait'] || 1, 10)
-  const fullPage = "full_page" in event.queryStringParameters
-  const path = event.queryStringParameters['path']
+  const scaleFactor = parseInt(
+    event.queryStringParameters["scale_factor"] || 2,
+    10
+  );
+  const viewportWidth = parseInt(
+    event.queryStringParameters["viewport_width"] || 1400,
+    10
+  );
+  const viewportHeight = parseInt(
+    event.queryStringParameters["viewport_height"] || 900,
+    10
+  );
+  const wait = parseInt(event.queryStringParameters["wait"] || 1, 10);
+  const fullPage = "full_page" in event.queryStringParameters;
+  const path = event.queryStringParameters["path"];
 
-  if(path === undefined || path === '') {
+  if (path === undefined || path === "") {
     return {
       statusCode: 400,
       body: JSON.stringify({
         error: "path not provided",
         message: "You must provide a path to store the image."
       })
-    }
+    };
   }
 
   // Path to Chrome executable
-  const executablePath = await extract()
+  const executablePath = await extract();
 
   // Initialize a new browser instance with puppeteer to execute within Lambda.
   const browser = await puppeteer.launch({
     ignoreHTTPSErrors: true,
     args: [
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--single-process',
-      '--no-zygote',
-      '--no-sandbox'
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--single-process",
+      "--no-zygote",
+      "--no-sandbox"
     ],
     executablePath
-  })
+  });
 
   // Run puppeteer script
-  const page = await browser.newPage()
+  const page = await browser.newPage();
 
   try {
-    console.debug(`Setting viewport to ${viewportWidth}x${viewportHeight} at ${scaleFactor}x...`)
+    console.debug(
+      `Setting viewport to ${viewportWidth}x${viewportHeight} at ${scaleFactor}x...`
+    );
     await page.setViewport({
       width: viewportWidth,
       height: viewportHeight,
-      deviceScaleFactor: scaleFactor,
-    })
-  }
-  catch (err) {
-    await browser.close()
-    await cleanup()
+      deviceScaleFactor: scaleFactor
+    });
+  } catch (err) {
+    await browser.close();
+    await cleanup();
 
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: "could not set viewport",
-        message: err.toString(),
+        message: err.toString()
       })
-    }
+    };
   }
 
   try {
-    console.debug(`Going to ${url.toString()}...`)
-    await page.goto(url.toString(), { waitUntil: 'load' })
-    console.debug(`Successfully loaded ${url.toString()}...`)
-  }
-  catch (err) {
-    await browser.close()
-    await cleanup()
+    console.debug(`Going to ${url.toString()}...`);
+    await page.goto(url.toString(), { waitUntil: "load" });
+    console.debug(`Successfully loaded ${url.toString()}...`);
+  } catch (err) {
+    await browser.close();
+    await cleanup();
 
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: "could not go to provided url",
-        message: err.toString(),
+        message: err.toString()
       })
-    }
+    };
   }
 
   // Wait
   const duration = wait * 1000;
-  console.debug(`Waiting ${duration} milliseconds...`)
-  await sleep(duration)
+  console.debug(`Waiting ${duration} milliseconds...`);
+  await sleep(duration);
 
   // TODO: Scrollpage
 
-  let buffer
+  let buffer;
   try {
     buffer = await page.screenshot({
       fullPage: fullPage,
-      type: 'png',
-      encoding: 'binary'
-    })
-    console.debug(`Generated ${fullPage} screenshot ${buffer.length} bytes...`)
-  }
-  catch (err) {
-    await browser.close()
-    await cleanup()
+      type: "png",
+      encoding: "binary"
+    });
+    console.debug(`Generated ${fullPage} screenshot ${buffer.length} bytes...`);
+  } catch (err) {
+    await browser.close();
+    await cleanup();
 
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: "could not generate screenshot",
-        message: err.toString(),
+        message: err.toString()
       })
-    }
+    };
   }
 
-  await browser.close()
+  await browser.close();
 
   // Cleanup the TMP folder after each execution otherwise Chromium's
   // garbage will cause the Lambda container to run out of space.
-  await cleanup()
+  await cleanup();
 
   const params = {
     Bucket: process.env.AWS_S3_BUCKET,
     Key: path,
     Body: buffer,
-    ACL: 'public-read',
-    ContentType: 'image/png',
-  }
+    ACL: "public-read",
+    ContentType: "image/png",
+    Expires: "Wed Dec 31 1969 16:00:00 GMT-0800 (PST)"
+  };
 
   try {
-    const response = await putObject(params)
-    const executionFinished = new Date()
+    const response = await putObject(params);
+    const executionFinished = new Date();
 
     return {
       statusCode: 200,
@@ -204,18 +212,17 @@ exports.lambdaHandler = async (event) => {
         success: true,
         url: url.toString(),
         key: path,
-        took: executionFinished - executionStarted,
+        took: executionFinished - executionStarted
       })
-    }
-  }
-  catch (err) {
+    };
+  } catch (err) {
     console.log("Error uploading image: ", err);
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: "could not store image",
-        message: err.toString(),
+        message: err.toString()
       })
-    }
+    };
   }
-}
+};
